@@ -1,57 +1,78 @@
-import streamlit as st
+# ================= Inventory Optimizer (robust, state-safe) =================
+import sys, os
 import pandas as pd
-import plotly.express as px
+import streamlit as st
+from pathlib import Path
+
+# Ensure root on path
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+# Init session keys (prevents missing-attr errors)
+from core.state import init as init_state
+init_state()
+
 from core.io import load_all_datasets
-from core.optimize import greedy_reallocate
-from core.state import remember_optimizer
+from core.forecast import make_county_forecasts
 
 st.title("Inventory Optimizer")
+
+# ---- Load data
 eri, hist, branches, inv, crm, webs = load_all_datasets(prefer_real=True)
 
-# --- read forecast context from session_state ---
-sel = st.session_state.sel_counties
-fc_next = st.session_state.forecast_next  # next-month per county with expected_dealer_units
-if not sel or fc_next is None or inv is None or branches is None:
-    st.info("Tip: set forecasts first and click 'Use these forecasts in Inventory Optimizer'.")
+if (hist is None) or (branches is None) or (inv is None):
+    st.error("Missing required data (History / Branches / Inventory). Check Admin/Data.")
     st.stop()
 
-st.caption(f"Using **Forecasts** for: {', '.join(sel)} — target units (next month): "
-           f"**{int(fc_next['expected_dealer_units'].sum())}**")
+# ---- Safe state pulls with defaults
+counties_all = sorted(hist["county"].unique().tolist())
+sel = st.session_state.get("sel_counties", counties_all[:6] if len(counties_all) >= 6 else counties_all)
+alpha = float(st.session_state.get("alpha", 0.10))
+share = float(st.session_state.get("market_share", 0.15))
 
-# Controls
-c1, c2, c3, c4 = st.columns(4)
-min_safety   = c1.number_input("Min safety stock / (branch, model)", 0, 50, 2, 1)
-max_transfer = c2.number_input("Max transfer distance (km)", 0, 1000, 250, 10)
-max_batch    = c3.number_input("Max batch size per transfer", 1, 100, 10, 1)
-trans_cost   = c4.number_input("Transfer cost per unit (€)", 0, 1000, st.session_state.transfer_cost_per_unit, 10)
+# Try to use forecasts saved from Forecasts page; if not there, recompute
+fc_next = st.session_state.get("forecast_next", None)
+if fc_next is None:
+    # Rebuild a minimal forecast for the selected counties so the page still works
+    if not sel:
+        st.info("Select counties in **Forecasts** first to drive the optimizer.")
+        try:
+            st.page_link("app/pages/2_Forecasts.py", label="Go to Forecasts", icon="📈")
+        except Exception:
+            pass
+        st.stop()
 
-# Visual stock
-invb = inv.merge(branches[['branch_id','branch_name','county']], on='branch_id', how='left')
-fig = px.bar(invb, x='branch_name', y='stock_units', color='model', barmode='group',
-             title="Current Stock by Branch & Model", hover_data=['county'])
-st.plotly_chart(fig, use_container_width=True)
+    fc_full = make_county_forecasts(hist, eri, sel, alpha, share)
+    if fc_full.empty:
+        st.warning("Not enough history to forecast selected counties.")
+        st.stop()
 
-# --- compute needs from forecast next-month, by county ---
-needs_by_county = fc_next[['county','expected_dealer_units']].groupby('county', as_index=False).sum()
-local_stock = invb.groupby('county', as_index=False)['stock_units'].sum().rename(columns={'stock_units':'local_stock'})
-gap = needs_by_county.merge(local_stock, on='county', how='left').fillna({'local_stock':0})
-gap['shortfall'] = (gap['expected_dealer_units'] - gap['local_stock']).astype(int)
+    fc_full["period_dt"] = pd.to_datetime(fc_full["period"], format="%Y-%m")
+    next_month = fc_full["period_dt"].min()
+    fc_next = fc_full[fc_full["period_dt"] == next_month].copy()
 
-st.subheader("Demand vs Local Stock (next month)")
-st.dataframe(gap.sort_values('shortfall', ascending=False), use_container_width=True)
+# ---- Build demand vs local stock (next month)
+# Map inventory to county via branches
+inv_b = inv.merge(
+    branches[["branch_id", "county"]],
+    on="branch_id", how="left"
+)
+local_stock = inv_b.groupby("county", as_index=False)["stock_units"].sum().rename(columns={"stock_units": "local_stock"})
 
-# --- reallocation plan (branch-level), still uses greedy_reallocate you already have ---
-plan = greedy_reallocate(inv, branches, min_safety, max_transfer, max_batch, trans_cost)
+demand = fc_next[["county", "expected_dealer_units"]].merge(local_stock, on="county", how="left")
+demand["local_stock"] = demand["local_stock"].fillna(0).astype(int)
+demand["shortfall_units"] = (demand["expected_dealer_units"] - demand["local_stock"]).astype(int)
 
-st.subheader("Proposed Reallocation Plan")
-st.dataframe(plan, use_container_width=True)
+# Let user confirm / tweak inputs before optimization
+st.subheader("Next‑month demand vs local stock")
+st.dataframe(
+    demand.sort_values(["shortfall_units","expected_dealer_units"], ascending=[False,False]),
+    use_container_width=True
+)
 
-cA, cB = st.columns([0.6, 0.4])
-with cA:
-    if st.button("✅ Use this plan in Revenue Simulator"):
-        remember_optimizer(plan, trans_cost)
-        st.success(f"Saved. Transfer units: {int(plan['units'].sum()) if not plan.empty else 0}")
-with cB:
-    st.download_button("Download Plan (CSV)",
-        plan.to_csv(index=False).encode('utf-8'),
-        file_name="Reallocation_Plan.csv", mime="text/csv")
+# ====== your existing optimization code can continue below ======
+# It should read from `demand` (shortfall), `inv_b` (stock by branch/model), etc.
+# and finally write the plan to st.session_state via:
+# from core.state import remember_optimizer
+# remember_optimizer(plan_df, transfer_cost_per_unit)
