@@ -1,0 +1,14 @@
+county,readiness_score,disposable_income_index,dealer_presence_index,yoy_ev_growth_index
+Dublin,94.0,96.0,42.0,1.03
+Cork,51.0,96.0,5.0,1.27
+Kildare,61.0,78.0,71.0,1.06
+Meath,68.0,108.0,42.0,1.21
+Wicklow,44.0,102.0,35.0,0.95
+Galway,60.0,104.0,71.0,0.76
+Limerick,60.0,77.0,17.0,0.74
+Wexford,25.0,125.0,61.0,1.18
+Roscommon,80.0,102.0,9.0,1.55
+Monaghan,72.0,94.0,37.0,1.15
+Longford,47.0,130.0,26.0,1.0
+Leitrim,57.0,99.0,79.0,1.48
+Cavan,70.0,78.0,85.0,1.15

@@ -1,0 +1,9 @@
+[theme]
+base = "dark"
+primaryColor = "#21D4FD"         # neon cyan
+backgroundColor = "#0B0F19"      # rich dark background
+secondaryBackgroundColor = "#141A2A"
+textColor = "#E8EEF6"
+
+[client]
+toolbarMode = "minimal"

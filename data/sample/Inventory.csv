@@ -1,0 +1,25 @@
+branch_id,model,trim,stock_units,avg_days_on_lot,msrp,gross_margin_per_unit
+B001,Model A,Base,6,54,53367.0,5180.0
+B001,Model B,Base,7,5,49819.0,1983.0
+B001,Model C,Base,10,53,40692.0,3740.0
+B002,Model A,Base,11,109,48226.0,5794.0
+B002,Model B,Base,2,117,42001.0,4137.0
+B002,Model C,Base,6,33,33113.0,1803.0
+B003,Model A,Base,4,22,47751.0,3003.0
+B003,Model B,Base,7,19,60272.0,5731.0
+B003,Model C,Base,7,119,38275.0,2892.0
+B004,Model A,Base,0,26,49662.0,2597.0
+B004,Model B,Base,9,50,60905.0,2141.0
+B004,Model C,Base,4,21,32751.0,4790.0
+B005,Model A,Base,9,40,47394.0,2543.0
+B005,Model B,Base,5,82,50248.0,5378.0
+B005,Model C,Base,11,91,41248.0,2545.0
+B006,Model A,Base,11,6,32730.0,5261.0
+B006,Model B,Base,6,15,55822.0,5494.0
+B006,Model C,Base,5,115,40807.0,1819.0
+B007,Model A,Base,10,50,29880.0,4616.0
+B007,Model B,Base,8,61,57913.0,2043.0
+B007,Model C,Base,9,111,28088.0,5162.0
+B008,Model A,Base,9,104,36527.0,4646.0
+B008,Model B,Base,10,53,42124.0,5645.0
+B008,Model C,Base,8,112,50128.0,5333.0

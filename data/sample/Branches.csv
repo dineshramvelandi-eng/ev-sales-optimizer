@@ -1,0 +1,9 @@
+branch_id,branch_name,county,serves_counties
+B001,Dealer 1,Dublin,Dublin|Kildare
+B002,Dealer 2,Cork,Cork|Kerry
+B003,Dealer 3,Kildare,Kildare|Meath
+B004,Dealer 4,Galway,Galway|Mayo
+B005,Dealer 5,Limerick,Limerick|Clare
+B006,Dealer 6,Wexford,Wexford|Waterford
+B007,Dealer 7,Meath,Meath|Louth
+B008,Dealer 8,Wicklow,Wicklow|Carlow
