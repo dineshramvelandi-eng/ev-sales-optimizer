@@ -71,8 +71,4 @@ st.dataframe(
     use_container_width=True
 )
 
-# ====== your existing optimization code can continue below ======
-# It should read from `demand` (shortfall), `inv_b` (stock by branch/model), etc.
-# and finally write the plan to st.session_state via:
-# from core.state import remember_optimizer
-# remember_optimizer(plan_df, transfer_cost_per_unit)
+
