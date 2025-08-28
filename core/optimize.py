@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 
-# Very simple 'distance' proxy between counties: 0 if same, else 200 km (placeholder)
-# In a real app, you'd have branch geo coordinates and compute distances properly.
+
+
 def _county_distance(c1: str, c2: str) -> float:
     return 0.0 if c1 == c2 else 200.0
 
